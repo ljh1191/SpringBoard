@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<!--  namespace 는 매퍼의 이름 가능한 자세히 -->
+ <mapper namespace="mapper.BoardAccount">
+ 
+ <sql id="search">
+ <where>
+ 	<if test="word != null and field == 'title'">
+ 	title like '%'||#{word}||'%'
+ 	</if>
+ 	<if test="word != null and field == 'writer'">
+ 	writer like '%'||#{word}||'%'
+ 	</if>
+ 	<if test="word != null and field == 'content'">
+ 	content like '%'||#{word}||'%'
+ 	</if>
+ </where>
+ </sql>
+ 
+ <insert id="insertBoard" parameterType="bvo">
+ insert into board 
+ values(board_seq.nextval,#{title},#{content},#{writer},sysdate,0,#{password},#{groups},#{levels},#{steps})
+ </insert>
+ 
+ <select id="listBoard" resultType="bvo" parameterType="java.util.Map">
+ select * from(select rownum rn,t.* from(select * from board <include refid="search"></include> order by groups desc, steps asc)t)
+	where rn &gt;= #{startRow} and rn &lt;= #{endRow}
+ </select>
+ 
+ <select id="viewBoard" parameterType="int" resultType="bvo">
+ select * from board where seq = #{seq}
+ </select>
+ 
+ <update id="updateBoard" parameterType="bvo">
+ update board 
+ set title = #{title}, content = #{content}, writer = #{writer}, password = ${password} 
+ where seq = #{seq}
+ </update>
+ 
+ <delete id="deleteBoard" parameterType="int">
+ delete from board where seq = #{seq}
+ </delete>
+ 
+ <select id="totcountBoard" resultType="int">
+ select count(*) from board
+ </select>
+ 
+ <select id="searchcountBoard" parameterType="java.util.Map" resultType="int">
+ select count(*) from board
+ <include refid="search"></include>
+ </select>
+ 
+ <select id="passcheckBoard" parameterType="int" resultType="String">
+ select password from board where seq = #{seq}
+ </select>
+ 
+ <update id="hitcountBoard" parameterType="int">
+ update board set hitcount = hitcount+1 where seq = #{seq}
+ </update>
+ 
+ <update id="dapupdateBoard" parameterType="bvo">
+ update board set steps = steps+1 where groups = #{groups} and steps > #{steps}
+ </update>
+ 
+ <select id="seqMaxNum" resultType="int">
+ select max(seq) from board
+ </select>
+ 
+ <insert id="replywirteComment" parameterType="bcvo">
+ insert into boardcomment values(boardcomment_seq.nextval,#{boardnum},#{reply},sysdate)
+ </insert>
+ 
+ <select id="replylistComment" parameterType="int" resultType="bcvo">
+ select * from boardcomment where boardnum = #{boardnum}
+ </select>
+ </mapper>
